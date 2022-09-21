@@ -1315,14 +1315,34 @@ def run(
         )
 
         try:
+            print(f"a3m_lines = {a3m_lines}")
             if a3m_lines is not None:
-                (
-                    unpaired_msa,
-                    paired_msa,
-                    query_seqs_unique,
-                    query_seqs_cardinality,
-                    template_features,
-                ) = unserialize_msa(a3m_lines, query_sequence)
+                print(f"use_templates = {use_templates}")
+                if use_templates is False:
+                    (
+                        unpaired_msa,
+                        paired_msa,
+                        query_seqs_unique,
+                        query_seqs_cardinality,
+                        template_features,
+                    ) = unserialize_msa(a3m_lines, query_sequence)
+                else:
+                    (
+                        unpaired_msa,
+                        paired_msa,
+                        query_seqs_unique,
+                        query_seqs_cardinality,
+                    ) = unserialize_msa(a3m_lines, query_sequence)[:4]
+                    template_features = get_msa_and_templates(
+                        jobname,
+                        query_sequence,
+                        result_dir,
+                        msa_mode,
+                        use_templates,
+                        custom_template_path,
+                        pair_mode,
+                        host_url,
+                    )[4]
             else:
                 (
                     unpaired_msa,
