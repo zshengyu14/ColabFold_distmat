@@ -22,6 +22,12 @@ from io import StringIO
 import importlib_metadata
 import numpy as np
 import pandas
+import scipy.special
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+import json
+import seaborn as sns
 
 try:
     import alphafold
@@ -485,6 +491,66 @@ def predict_structure(
             protein_lines = protein.to_pdb(unrelaxed_protein)
             files.get("unrelaxed","pdb").write_text(protein_lines)
             unrelaxed_pdb_lines.append(protein_lines)
+            
+            distmat_dir=f"{files.prefix}/distmat_dir"
+            os.makedirs(f'{distmat_dir}/{tag}_distribution',exist_ok=True)
+
+            bin_num=64
+            probs=scipy.special.softmax(np.asarray( 
+                prediction_result["distogram"]['logits'])[:seq_len,:seq_len,:],axis=-1)
+            bin_edges=np.linspace(
+                    2.3125,  21.6875,bin_num - 1)
+            step=bin_edges[1]-bin_edges[0]
+            bin_centers=bin_edges-step/2.0
+            bin_centers=np.concatenate([bin_centers, [bin_centers[-1] + step]], axis=0)
+            mean=np.sum(probs * bin_centers, axis=-1)
+            sq_centers=np.square(bin_centers)
+            std=np.sqrt(np.sum(probs * sq_centers, axis=-1)-mean*mean)
+            prob_7=np.log10(np.sum(probs[...,:16], axis=-1))
+            prob_7=pd.DataFrame(prob_7).rename(columns={i:i+1 for i in range(seq_len)})
+            prob_7.index=[i+1 for i in range(seq_len)]
+            ax=sns.heatmap(prob_7,cmap='YlGnBu')
+            plt.xlabel('residue i') 
+            plt.ylabel('residue j') 
+            cbar = ax.collections[0].colorbar
+            cbar.set_label(r'log$_{10}$p(distance < 7Å)')
+            plt.savefig(f'{distmat_dir}/{tag}_7A_prob_log.png',dpi=800)
+            plt.close()
+
+            prob_14=np.log10(np.sum(probs[...,:32], axis=-1))
+            prob_14=pd.DataFrame(prob_14).rename(columns={i:i+1 for i in range(seq_len)})
+            prob_14.index=[i+1 for i in range(seq_len)]
+            ax=sns.heatmap(prob_14,cmap='YlGnBu')
+            plt.xlabel('residue i') 
+            plt.ylabel('residue j') 
+            cbar = ax.collections[0].colorbar
+            cbar.set_label(r'log$_{10}$p(distance < 12Å)')
+            plt.savefig(f'{distmat_dir}/{tag}_12A_prob_log.png',dpi=800)
+            plt.close()
+
+            prob_14=np.sum(probs[...,:32], axis=-1)
+            prob_14=pd.DataFrame(prob_14).rename(columns={i:i+1 for i in range(seq_len)})
+            prob_14.index=[i+1 for i in range(seq_len)]
+            prob_14.to_csv(f'{distmat_dir}/{tag}__12A_prob.csv')
+            ax=sns.heatmap(prob_14,cmap='YlGnBu')
+            plt.xlabel('residue i') 
+            plt.ylabel('residue j') 
+            cbar = ax.collections[0].colorbar
+            cbar.set_label(r'p(distance < 12Å)')
+            plt.savefig(f'{distmat_dir}/{tag}_12A_prob.png',dpi=800)
+            plt.close()
+
+            mean=pd.DataFrame(mean).rename(columns={i:i+1 for i in range(seq_len)})
+            mean.index=[i+1 for i in range(seq_len)]
+            std=pd.DataFrame(std).rename(columns={i:i+1 for i in range(seq_len)})
+            std.index=[i+1 for i in range(seq_len)]
+            mean.to_csv(f'{distmat_dir}/{tag}__mean.csv')
+            std.to_csv(f'{distmat_dir}/{tag}__std.csv')
+            for i in range(seq_len):
+              for j in range(i+1,seq_len):
+                prob=pd.DataFrame(probs[i][j]).rename(columns={0:'probability'})
+                prob.index=[f'dist<{bin_edges[0]}']+[f'{bin_edges[i]}<dist<{bin_edges[i+1]}' for i in range(0,bin_num-2)]+[f'dist>{bin_edges[-1]}']
+                prob.to_csv(f'{distmat_dir}/{tag}_distribution/{i+1}_{j+1}.csv')
 
             # save raw outputs
             if save_all:
