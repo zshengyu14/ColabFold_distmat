@@ -493,7 +493,7 @@ def predict_structure(
             unrelaxed_pdb_lines.append(protein_lines)
             
             distmat_dir=f"{files.result_dir}/{files.prefix}_distmat"
-            os.makedirs(f'{distmat_dir}/{tag}_distribution',exist_ok=True)
+            os.makedirs(f'{distmat_dir}',exist_ok=True)
 
             bin_num=64
             probs=scipy.special.softmax(np.asarray( 
@@ -506,6 +506,7 @@ def predict_structure(
             mean=np.sum(probs * bin_centers, axis=-1)
             sq_centers=np.square(bin_centers)
             std=np.sqrt(np.sum(probs * sq_centers, axis=-1)-mean*mean)
+            
             prob_7=np.log10(np.sum(probs[...,:16], axis=-1))
             prob_7=pd.DataFrame(prob_7).rename(columns={i:i+1 for i in range(seq_len)})
             prob_7.index=[i+1 for i in range(seq_len)]
@@ -546,14 +547,23 @@ def predict_structure(
             std.index=[i+1 for i in range(seq_len)]
             mean.to_csv(f'{distmat_dir}/{tag}_mean.csv')
             std.to_csv(f'{distmat_dir}/{tag}_std.csv')
-            for i in range(seq_len):
-              for j in range(i+1,seq_len):
-                prob=pd.DataFrame(probs[i][j]).rename(columns={0:'probability'})
-                prob.index=[f'dist<{bin_edges[0]}']+[f'{bin_edges[i]}<dist<{bin_edges[i+1]}' for i in range(0,bin_num-2)]+[f'dist>{bin_edges[-1]}']
-                prob.to_csv(f'{distmat_dir}/{tag}_distribution/{i+1}_{j+1}.csv')
+
+            ax=sns.heatmap(mean,cmap='YlGnBu')
+            plt.xlabel('residue i') 
+            plt.ylabel('residue j') 
+            cbar = ax.collections[0].colorbar
+            cbar.set_label(r'distance (Å)')
+            plt.savefig(f'{distmat_dir}/{tag}_distmat.png',dpi=800)
+            plt.close()
 
             # save raw outputs
             if save_all:
+                os.makedirs(f'{distmat_dir}/{tag}_distribution',exist_ok=True)
+                for i in range(seq_len):
+                    for j in range(i+1,seq_len):
+                        prob=pd.DataFrame(probs[i][j]).rename(columns={0:'probability'})
+                        prob.index=[f'dist<{bin_edges[0]}']+[f'{bin_edges[i]}<dist<{bin_edges[i+1]}' for i in range(0,bin_num-2)]+[f'dist>{bin_edges[-1]}']
+                        prob.to_csv(f'{distmat_dir}/{tag}_distribution/{i+1}_{j+1}.csv')
                 with files.get("all","pickle").open("wb") as handle:
                     pickle.dump(prediction_result, handle)
             if save_single_representations:
