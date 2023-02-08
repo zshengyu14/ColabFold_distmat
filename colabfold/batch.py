@@ -547,6 +547,7 @@ def predict_structure(
             std.index=[i+1 for i in range(seq_len)]
             mean.to_csv(f'{distmat_dir}/{tag}_mean.csv')
             std.to_csv(f'{distmat_dir}/{tag}_std.csv')
+            np.save(f'{distmat_dir}/{tag}_prob_distributions.npy',probs)
 
             ax=sns.heatmap(mean,cmap='YlGnBu')
             plt.xlabel('residue i') 
