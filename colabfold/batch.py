@@ -531,7 +531,7 @@ def predict_structure(
             prob_14=np.sum(probs[...,:32], axis=-1)
             prob_14=pd.DataFrame(prob_14).rename(columns={i:i+1 for i in range(seq_len)})
             prob_14.index=[i+1 for i in range(seq_len)]
-            prob_14.to_csv(f'{distmat_dir}/{tag}__12A_prob.csv')
+            prob_14.to_csv(f'{distmat_dir}/{tag}_12A_prob.csv')
             ax=sns.heatmap(prob_14,cmap='YlGnBu')
             plt.xlabel('residue i') 
             plt.ylabel('residue j') 
@@ -544,8 +544,8 @@ def predict_structure(
             mean.index=[i+1 for i in range(seq_len)]
             std=pd.DataFrame(std).rename(columns={i:i+1 for i in range(seq_len)})
             std.index=[i+1 for i in range(seq_len)]
-            mean.to_csv(f'{distmat_dir}/{tag}__mean.csv')
-            std.to_csv(f'{distmat_dir}/{tag}__std.csv')
+            mean.to_csv(f'{distmat_dir}/{tag}_mean.csv')
+            std.to_csv(f'{distmat_dir}/{tag}_std.csv')
             for i in range(seq_len):
               for j in range(i+1,seq_len):
                 prob=pd.DataFrame(probs[i][j]).rename(columns={0:'probability'})
