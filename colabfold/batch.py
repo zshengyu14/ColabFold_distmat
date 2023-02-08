@@ -492,7 +492,7 @@ def predict_structure(
             files.get("unrelaxed","pdb").write_text(protein_lines)
             unrelaxed_pdb_lines.append(protein_lines)
             
-            distmat_dir=f"{files.prefix}/distmat_dir"
+            distmat_dir=f"{files.result_dir}/{files.prefix}_distmat"
             os.makedirs(f'{distmat_dir}/{tag}_distribution',exist_ok=True)
 
             bin_num=64
