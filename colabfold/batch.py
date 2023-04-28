@@ -450,7 +450,7 @@ def predict_structure(
                             pickle.dump(result, handle)
 
             prediction_result, recycles = \
-            model_runner.predict(input_features, random_seed=seed, prediction_callback=callback)
+            model_runner.predict(input_features, random_seed=seed, callback=callback)
             prediction_result = _jnp_to_np(prediction_result)
             prediction_times.append(time.time() - start)
 
