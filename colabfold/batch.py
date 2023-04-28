@@ -507,7 +507,7 @@ def predict_structure(
             sq_centers=np.square(bin_centers)
             #std=np.sqrt(np.sum(probs * sq_centers, axis=-1)-mean*mean)
             mean=mean[...,None]
-            std=np.sqrt(np.sum(np.square(mean-bin_centers)*probs),axis=-1)
+            std=np.sqrt(np.sum(np.square(mean-bin_centers)*probs,axis=-1))
             
             prob_7=np.log10(np.sum(probs[...,:16], axis=-1))
             prob_7=pd.DataFrame(prob_7).rename(columns={i:i+1 for i in range(seq_len)})
