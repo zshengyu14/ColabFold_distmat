@@ -506,7 +506,7 @@ def predict_structure(
             mean=np.sum(probs * bin_centers, axis=-1)
             sq_centers=np.square(bin_centers)
             #std=np.sqrt(np.sum(probs * sq_centers, axis=-1)-mean*mean)
-            mean=mean[...,None]
+            #mean=mean[...,None]
             std=np.sqrt(np.sum(np.square(mean-bin_centers)*probs,axis=-1))
             
             prob_7=np.log10(np.sum(probs[...,:16], axis=-1))
